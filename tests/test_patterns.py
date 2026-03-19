@@ -301,21 +301,21 @@ def test_run_with_retry_succeeds_on_second_attempt() -> None:
 
 def test_vacuum_enforces_minimum_retain_hours() -> None:
     """vacuum_table should override retain_hours < 168 to 168."""
+    from delta_patterns.time_travel import TimeTravelConfig, vacuum_table
+
     mock_spark = MagicMock()
-    config = MagicMock()
-    config.table_name = "test_table"
-    config.spark = mock_spark
+    cfg = TimeTravelConfig(table_name="test_table", spark=mock_spark)
+    vacuum_table(cfg, retain_hours=1)  # Dangerously low — should be overridden
 
-    with patch("delta_patterns.time_travel.TimeTravelConfig"):
-        from delta_patterns.time_travel import TimeTravelConfig, vacuum_table
+    # vacuum_table called spark.sql — collect all SQL strings issued
+    all_sql_calls = [str(call[0][0]) for call in mock_spark.sql.call_args_list]
+    vacuum_sql = next((s for s in all_sql_calls if "VACUUM" in s.upper()), None)
 
-        cfg = TimeTravelConfig(table_name="test_table", spark=mock_spark)
-        vacuum_table(cfg, retain_hours=1)  # Dangerously low — should be overridden
-
-    # Verify SQL used 168, not 1
-    call_args = mock_spark.sql.call_args[0][0]
-    assert "168" in call_args
-    assert "1 HOURS" not in call_args
+    assert vacuum_sql is not None, "Expected a VACUUM SQL call"
+    assert "168" in vacuum_sql
+    # Confirm the override happened: the original value (1) was replaced by 168
+    assert "RETAIN 1 HOURS" not in vacuum_sql
+    assert "RETAIN 168 HOURS" in vacuum_sql
 
 
 # ---------------------------------------------------------------------------
