@@ -1,0 +1,143 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Raw Bronze layer tables ingested via Auto Loader / batch ingestion"
+    database: hive_metastore
+    schema: bronze
+    freshness:
+      warn_after: {count: 12, period: hour}
+      error_after: {count: 24, period: hour}
+    loaded_at_field: _ingested_at
+    tables:
+      - name: events
+        description: "Raw clickstream and revenue events from all source systems"
+        columns:
+          - name: event_id
+            description: "Unique event identifier (UUID from source system)"
+          - name: user_id
+            description: "User identifier — join key to users dimension"
+          - name: event_ts
+            description: "Event timestamp in source timezone (cast to UTC in staging)"
+
+models:
+  - name: stg_events
+    description: >
+      Staged events: raw source data with renamed columns, basic type casts,
+      and hard-filter deduplication. No business logic.
+    config:
+      tags: ["staging"]
+    columns:
+      - name: event_id
+        description: "Primary key — unique per event"
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: "Foreign key to users dimension"
+        tests:
+          - not_null
+      - name: event_ts
+        description: "Event time in UTC"
+        tests:
+          - not_null
+      - name: event_type
+        description: "Normalized lowercase event type"
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - page_view
+                - click
+                - purchase
+                - signup
+                - logout
+                - search
+                - add_to_cart
+                - checkout_start
+                - checkout_complete
+      - name: revenue_amount
+        description: "Revenue in USD — coalesced to 0.0 if null"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1000000
+      - name: is_paid
+        description: "Whether this event involved a payment"
+        tests:
+          - accepted_values:
+              values: [true, false, null]
+              quote: false
+
+  - name: int_sessions
+    description: >
+      Session-level aggregations: duration, event count, revenue, engagement tier.
+      Incremental model — merges on session_id, 3-day lookback for late events.
+    config:
+      tags: ["intermediate"]
+    columns:
+      - name: session_id
+        description: "Primary key"
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        tests:
+          - not_null
+      - name: session_date
+        tests:
+          - not_null
+      - name: session_revenue
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: engagement_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: [power_user, engaged, casual, bounced]
+      - name: revenue_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: [enterprise, mid_market, smb, free]
+
+  - name: mart_daily_metrics
+    description: >
+      Daily business metrics mart consumed by Tableau, Looker, and executive dashboards.
+      Partitioned by metric_date. Rebuilt for the last 3 days on each incremental run.
+      SLA: 15 minutes from trigger.
+    config:
+      tags: ["marts", "daily"]
+    columns:
+      - name: metric_date
+        description: "Calendar date for the aggregation"
+        tests:
+          - not_null
+      - name: revenue_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: [enterprise, mid_market, smb, free]
+      - name: engagement_tier
+        tests:
+          - not_null
+          - accepted_values:
+              values: [power_user, engaged, casual, bounced]
+      - name: unique_sessions
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: conversion_rate_pct
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+      - name: gross_revenue
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
