@@ -11,8 +11,7 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql import functions as F
+from pyspark.sql import SparkSession
 
 logger = logging.getLogger(__name__)
 

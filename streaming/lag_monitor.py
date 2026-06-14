@@ -7,11 +7,10 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 from kafka import KafkaAdminClient, KafkaConsumer
-from kafka.admin import NewTopic
 from kafka.errors import KafkaError
 
 logger = logging.getLogger(__name__)

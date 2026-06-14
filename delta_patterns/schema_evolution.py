@@ -9,10 +9,8 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from delta.tables import DeltaTable
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql import functions as F
-from pyspark.sql.types import DataType, StructType
+from pyspark.sql.types import StructType
 
 logger = logging.getLogger(__name__)
 

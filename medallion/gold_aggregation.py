@@ -13,7 +13,7 @@ from typing import Any, Final
 
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
-from pyspark.sql.types import DoubleType, LongType, StringType, TimestampType
+from pyspark.sql.types import DoubleType, LongType
 
 logger = logging.getLogger(__name__)
 

@@ -62,9 +62,8 @@ jobs:
         run: pip install ruff
 
       - name: Run ruff
-        run: ruff check . --select E,F,W --ignore E501,W503
+        run: ruff check . --select E,F,W --ignore E501
         # E501: line length — intentionally verbose for documented examples
-        # W503: line break before binary operator — style preference
 
   syntax-check:
     name: Python Syntax Check

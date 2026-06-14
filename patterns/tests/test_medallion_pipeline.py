@@ -12,11 +12,6 @@ import pytest
 
 from patterns.medallion_pipeline import (
     ZORDER_BENCHMARK_RESULT,
-    MedallionPipelineConfig,
-    BronzeConfig,
-    SilverConfig,
-    GoldConfig,
-    OptimizeConfig,
     build_optimize_sql,
     build_schema_evolution_sql,
     build_vacuum_sql,

@@ -7,8 +7,6 @@ No Spark required for unit tests — all Spark-dependent tests mock SparkSession
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -106,8 +104,6 @@ def test_bronze_metadata_columns_added() -> None:
     mock_df = MockDataFrame([{"event_id": "e1", "user_id": "u1"}])
     call_log: list[str] = []
 
-    original_with_column = mock_df.withColumn
-
     def tracking_with_column(name: str, value: Any) -> MockDataFrame:
         call_log.append(name)
         return mock_df
@@ -149,7 +145,7 @@ def test_silver_dedup_removes_duplicates() -> None:
 
         from medallion.silver_transform import drop_duplicates_keep_latest
 
-        result = drop_duplicates_keep_latest(mock_df, "user_id", "updated_at")
+        drop_duplicates_keep_latest(mock_df, "user_id", "updated_at")
 
     # Verify ROW_NUMBER expression was constructed
     mock_f.expr.assert_called_once()

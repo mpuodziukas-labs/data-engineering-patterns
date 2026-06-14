@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Final
 
 logger = logging.getLogger(__name__)
@@ -494,7 +494,7 @@ def run_kafka_streaming(config: KafkaStreamConfig, spark: Any) -> None:
     - No output mode = 'complete' (grows unbounded state)
     """
     from pyspark.sql import functions as F
-    from pyspark.sql.types import StringType, StructType
+    from pyspark.sql.types import StringType
 
     read_opts = build_kafka_read_options(config)
     write_opts = build_stream_write_options(config)
@@ -548,3 +548,4 @@ def run_kafka_streaming(config: KafkaStreamConfig, spark: Any) -> None:
     )
 
     agg_query.awaitTermination()
+    dlq_query.awaitTermination()

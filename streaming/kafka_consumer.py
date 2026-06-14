@@ -232,3 +232,4 @@ def run_kafka_to_delta(config: KafkaConsumerConfig, spark: SparkSession | None =
     )
 
     agg_query.awaitTermination()
+    dlq_query.awaitTermination()
