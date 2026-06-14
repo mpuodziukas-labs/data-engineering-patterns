@@ -1,5 +1,7 @@
 # data-engineering-patterns
 
+![CI](https://github.com/mpuodziukas-labs/data-engineering-patterns/actions/workflows/ci.yml/badge.svg)
+
 Production data engineering patterns: Delta Lake Medallion, Kafka streaming, dbt quality gates. 40+ tests. Used at scale.
 
 Medallion architecture patterns for Databricks. Z-ORDER. CDC. Kafka lag monitoring. dbt incremental models. Tested patterns, not toy examples.
@@ -267,3 +269,11 @@ These patterns came from production incidents:
 - Delta Lake 3.0+
 - For CDC: `delta.enableChangeDataFeed = true` on source tables
 - For column rename/drop: column mapping mode must be enabled first
+
+---
+
+## Limitations
+
+- Bundled tests are pure-Python and do not exercise a live Spark/Databricks runtime; running the patterns end-to-end requires your own cluster.
+- Benchmark numbers reflect the stated dataset and runtime configuration — your results will vary with data shape and hardware.
+- These are reference patterns to adapt, not a drop-in framework for arbitrary pipelines.
